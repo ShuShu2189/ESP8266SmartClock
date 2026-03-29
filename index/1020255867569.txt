@@ -1,0 +1,47 @@
+要实现登录后自动跳转到计时器更新页面，你可以修改 `handleLogin()` 函数的代码，在登录成功后，使用重定向来将用户自动跳转到计时器更新页面。
+
+以下是修改代码的步骤：
+
+1. 在 `handleLogin()` 函数中，添加以下代码来重定向到计时器更新页面：
+
+```cpp
+if (pin == userPIN) {
+  authenticated = true;
+  server.sendHeader(Location, set-time);
+  server.send(302);
+} else {
+   ...
+}
+```
+
+这将设置一个 HTTP 响应的头部 `Location`，使其指向 `set-time` 页面，并使用 302 Found 状态码向客户端发送响应。这将使客户端的浏览器自动重定向到 `set-time` 页面。
+
+2. 创建一个新的请求处理函数 `handleSetTimePage()`，用于返回计时器更新页面的 HTML 代码。在这个函数中，需要检查用户是否已通过身份验证。如果未通过，则返回一个错误消息。
+
+```cpp
+void handleSetTimePage() {
+  if (!authenticated) {
+    server.send(401, textplain, Not authenticated);
+    return;
+  }
+  String html = htmlbody;
+  html += h1Update Timerh1;
+  html += form method='post' action='set-time';
+  html += label for='time'New Timelabel;
+  html += input type='text' name='time';
+  html += input type='submit' value='Update';
+  html += form;
+  html += bodyhtml;
+  server.send(200, texthtml, html);
+}
+```
+
+3. 在 `setup()` 函数中，将 `handleSetTimePage()` 函数注册为 `set-time` 页面的请求处理函数：
+
+```cpp
+server.on(set-time, HTTP_GET, handleSetTimePage);
+```
+
+这样，当用户成功登录后，Esp8266会自动将用户重定向到 `set-time` 页面，在这个页面中，用户可以轻松更新计时器的时间。
+
+希望这个解决方案能够帮助你实现自动重定向到计时器更新页面的功能！如果你有其他问题或需要更多帮助，请在提问中让我知道。

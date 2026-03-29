@@ -1,0 +1,66 @@
+以下是使用Arduino编写的代码示例，用于从互联网的NTP校时服务器获取时间，并将其写入DS1302实时时钟模块中。
+
+```arduino
+#include <ESP8266WiFi.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
+#include <DS1302RTC.h>
+
+// Replace with your network credentials
+const char* ssid = "your_SSID";
+const char* password = "your_PASSWORD";
+
+// Define NTP Server and time offset
+const char* ntpServer = "pool.ntp.org";
+const long  gmtOffset_sec = 0;
+const int   daylightOffset_sec = 3600;
+
+// Define DS1302 RTC pins
+const int rtcCePin = D1;
+const int rtcIoPin = D2;
+const int rtcSclkPin = D3;
+
+// Create a NTPClient to communicate with the NTP server
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, ntpServer, gmtOffset_sec, daylightOffset_sec);
+
+// Create a DS1302RTC object to communicate with DS1302 RTC module
+DS1302RTC rtc(rtcCePin, rtcIoPin, rtcSclkPin);
+
+void setup() {
+  // Connect to Wi-Fi
+  WiFi.begin(ssid, password);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+  Serial.println("Connected to WiFi");
+
+  // Initialize DS1302
+  rtc.halt(false);
+  rtc.writeProtect(false);
+  Serial.println("DS1302 Initialized");
+
+  // Set DS1302 time using NTP
+  timeClient.begin();
+  timeClient.update();
+
+  rtc.set(timeClient.getEpochTime());
+  Serial.println("DS1302 Updated");
+
+  // Print current time
+  Serial.println(rtc.getDateTimeString());
+}
+
+void loop() {
+  // Nothing to do here
+}
+```
+
+请确保在编译和上传代码之前安装好 `ESP8266WiFi`，`NTPClient`，`WiFiUdp` 和 `DS1302RTC` 这几个库。此外，你需要替换 `your_SSID` 和 `your_PASSWORD` 为你的 Wi-Fi 网络的凭据。
+
+这段代码首先连接到你的 Wi-Fi 网络，然后初始化 DS1302 RTC 模块。它通过使用 NTPClient 从 NTP 服务器获取当前时间，然后将时间写入 DS1302 实时时钟模块。最后，它会打印当前时间。
+
+需要注意的是，你需要将 DS1302 RTC 模块的引脚连接到正确的 ESP8266 引脚。请根据你的硬件布局进行正确的引脚连接。在本示例中，我们使用 D1 引脚作为 CE 引脚，D2 引脚作为 IO 引脚，D3 引脚作为 SCLK 引脚。
+
+希望这可以帮助到你实现校时功能！

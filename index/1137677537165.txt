@@ -1,0 +1,107 @@
+是的，您可以将设备的热点IP地址固定下来，以便用户能够使用固定的IP地址访问设置网页。以下是修改后的代码示例，实现了这个功能：
+
+```cpp
+#include <ESP8266WiFi.h>
+#include <EEPROM.h>
+
+// WiFi连接相关参数
+const char* ssid = "your_network_ssid";
+const char* password = "your_network_password";
+
+// 热点IP地址设置
+IPAddress apIP(192, 168, 1, 1);
+IPAddress subnet(255, 255, 255, 0);
+
+// EEPROM存储地址
+const int ssidAddress = 0;
+const int passwordAddress = 50;
+
+void setup() {
+  // 初始化串口
+  Serial.begin(115200);
+
+  // 读取EEPROM中保存的WiFi数据
+  String storedSSID = readEEPROM(ssidAddress, 32);
+  String storedPassword = readEEPROM(passwordAddress, 32);
+
+  // 尝试连接WiFi
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(storedSSID.c_str(), storedPassword.c_str());
+
+  // 等待WiFi连接
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
+  }
+
+  // 连接成功
+  Serial.println("WiFi connected");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
+
+  // 若连接失败，则以AP模式运行
+  if (!isConnected()) {
+    startAPMode();
+  }
+}
+
+void loop() {
+  // TODO: 程序主循环
+}
+
+// 保存WiFi账号和密码到EEPROM
+void saveWiFiCredentials(String ssid, String password) {
+  writeEEPROM(ssidAddress, ssid);
+  writeEEPROM(passwordAddress, password);
+}
+
+// 从EEPROM中读取数据
+String readEEPROM(int address, int length) {
+  String value = "";
+  for (int i = 0; i < length; ++i) {
+    char c = EEPROM.read(address + i);
+    if (c == '\0') {
+      break;
+    }
+    value += c;
+  }
+  return value;
+}
+
+// 写入数据到EEPROM
+void writeEEPROM(int address, String value) {
+  for (int i = 0; i < value.length(); ++i) {
+    EEPROM.write(address + i, value[i]);
+  }
+  EEPROM.write(address + value.length(), '\0');
+  EEPROM.commit();
+}
+
+// 判断是否已连接WiFi
+bool isConnected() {
+  return WiFi.status() == WL_CONNECTED;
+}
+
+// 以AP模式运行
+void startAPMode() {
+  Serial.println("Starting AP mode");
+  
+  // 创建热点
+  WiFi.softAPConfig(apIP, apIP, subnet);
+  WiFi.softAP("YourAPName", "YourAPPassword");
+
+  // 显示热点IP地址
+  Serial.print("AP IP address: ");
+  Serial.println(apIP);
+
+  // TODO: 处理用户连接和设置网页
+}
+```
+
+在这个示例中，我们定义了一个固定的热点IP地址`apIP`，并将其传递给`WiFi.softAPConfig()`函数来设置ESP8266的热点IP地址和子网掩码。接着，我们在`startAPMode()`函数中打印了这个IP地址，以便用户可以获取到。
+
+请注意，为了使固定IP生效，您需要确保选择一个未被路由器分配的地址。确保与您当前网络下的其他设备IP地址不冲突。
+
+另外，还要注意在创建热点时，需要指定一个热点名称（`YourAPName`）和密码（`YourAPPassword`），以确保用户能够连接并进入设置网页。
+
+请根据您的实际需求修改示例代码中的网络信息和热点名称/密码，并确保没有与其他设备的IP地址冲突。

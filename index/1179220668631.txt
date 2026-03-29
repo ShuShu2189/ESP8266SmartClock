@@ -1,0 +1,52 @@
+以下是一个基本的Arduino代码示例，应该可以实现这个功能：
+
+```c
+#include <ESP8266WiFi.h>
+#include <WiFiManager.h>
+
+WiFiManager wifiManager;
+
+char STA_SSID[32] = ""; // 储存 WiFi SSID 的变量
+char STA_PSW[32] = ""; // 储存 WiFi 密码的变量
+
+void setup() {
+  Serial.begin(115200);
+  
+  wifiManager.autoConnect("ESP8266");
+  
+  WiFi.mode(WIFI_STA);
+  Serial.println("WiFi STA mode");
+
+  // 尝试连接 WiFi
+  while (strlen(STA_SSID) == 0 || strlen(STA_PSW) == 0) {
+    Serial.println("WiFi not configured");
+    delay(1000);
+  }
+
+  WiFi.begin(STA_SSID, STA_PSW);
+
+  // 等待连接结果
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Connecting to WiFi...");
+    delay(1000);
+  }
+
+  Serial.println("Connected to WiFi!");
+}
+
+void loop() {
+  // 用户可以添加自己的代码
+}
+```
+
+这个代码的说明如下：
+
+1. 引入了 ESP8266WiFi 库和 WiFiManager 库
+
+2. 声明了 `STA_SSID` 和 `STA_PSW` 两个字符串变量，用于存储 WiFi 账号和密码
+
+3. `setup()` 函数中会首先调用 `wifiManager.autoConnect()` 来尝试连接 WiFi。如果 ESP8266 第一次启动，并没有储存账号和密码信息，则无法连接 WiFi，此时会自动进入 WiFi AP模式（所述的热点），等待用户进行下一步配置。
+
+4. 如果此时可以连接 WiFi (即 `STA_SSID` 和 `STA_PSW` 不为空)，则调用 `WiFi.begin()` 来连接 WiFi
+
+5. 在 `loop()` 函数中，用户可以添加自己的代码，比如控制一些传感器、执行某些任务等。

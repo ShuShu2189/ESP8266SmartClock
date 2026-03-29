@@ -1,0 +1,60 @@
+加入 PIN 认证功能可以增强你的远程控制的安全性。下面是一个简单的方法来实现这一功能：
+
+1. 在 `handleRoot()` 函数中，将网页中的输入框和提交按钮更改为 PIN 码输入框和登录按钮。
+
+```cpp
+void handleRoot() {
+  String html = "<html><body>";
+  html += "<h1>ESP8266 Remote Control</h1>";
+  html += "<form method='post' action='/login'>";
+  html += "<input type='text' name='pin' placeholder='Enter PIN'>";
+  html += "<input type='submit' value='Login'>";
+  html += "</form>";
+  html += "</body></html>";
+  server.send(200, "text/html", html);
+}
+```
+
+2. 创建一个 `userPIN` 变量以存储正确的 PIN 码。可以在 `setup()` 函数中初始化 `userPIN`。
+
+```cpp
+int userPIN = 1234; // 用你自己的 PIN 码替换 1234
+```
+
+3. 创建一个 `authenticated` 变量以存储当前用户的身份验证状态，并将其初始化为 false。
+
+```cpp
+boolean authenticated = false;
+```
+
+4. 创建一个新的请求处理函数 `handleLogin()` ，用于处理用户登录请求。在该函数中，获取来自网页的 PIN 码，并与 `userPIN` 进行比较。如果匹配，则将 `authenticated` 变量设置为 true。
+
+```cpp
+void handleLogin() {
+  int pin = server.arg("pin").toInt();
+  if (pin == userPIN) {
+    authenticated = true;
+    server.send(200, "text/plain", "Login successful");
+  } else {
+    server.send(200, "text/plain", "Incorrect PIN");
+  }
+}
+```
+
+5. 创建一个新的请求处理函数 `handleSetTime()` ，用于处理修改时间的请求。在该函数中，首先检查 `authenticated` 变量的值。如果为 false，表示用户未经身份验证，则拒绝该请求并发送一个错误消息。如果为 true，则继续处理请求，更新计时器的时间。
+
+```cpp
+void handleSetTime() {
+  if (!authenticated) {
+    server.send(401, "text/plain", "Not authenticated");
+    return;
+  }
+  currentTime = server.arg("time");
+  // 在这里更新你的计时器的时间
+  server.send(200, "text/plain", "Time updated");
+}
+```
+
+这样，当用户尝试修改计时器的时间时，Esp8266将首先要求用户输入正确的PIN码来进行身份验证。只有在用户成功验证身份之后，才会处理来自网页的时间更新请求。
+
+希望这可以帮助你实现 PIN 认证功能！如果你还有其他问题或需要更多帮助，请继续提问。
